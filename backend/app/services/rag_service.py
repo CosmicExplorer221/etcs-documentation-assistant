@@ -197,11 +197,16 @@ class RAGService:
         # If no citations found in text, create them from top results
         if not citations and search_results:
             for result in search_results[:3]:  # Top 3 results
+                # Convert paragraph to string if it's an integer (for old data compatibility)
+                paragraph = result.get('paragraph')
+                if paragraph is not None and not isinstance(paragraph, str):
+                    paragraph = str(paragraph)
+
                 citation = {
                     'subset': result['subset'],
                     'section': result.get('section'),
                     'page': result.get('page'),
-                    'paragraph': result.get('paragraph'),
+                    'paragraph': paragraph,
                     'text': result['text'][:200] + "...",
                     'document_id': result['document_id'],
                 }
