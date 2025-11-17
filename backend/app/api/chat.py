@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+import logging
 from app.core.database import get_db
 from app.models import Conversation, Message, MessageRoleEnum
 from app.schemas.conversation import ConversationResponse, ConversationWithMessages
 from app.schemas.message import MessageCreate, MessageResponse, ChatResponse
+from app.services.rag_service import rag_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -51,31 +55,35 @@ async def send_message(
     db.add(user_message)
     db.commit()
 
-    # TODO: Phase 2 - Call RAG system to generate AI response
-    # For now, return a placeholder response
-    ai_response_content = (
-        f"This is a placeholder response in {message_data.style} style. "
-        "The actual RAG system will be integrated in Phase 2 with real ETCS documentation."
-    )
+    # Generate AI response using RAG (Phase 2)
+    try:
+        rag_result = rag_service.generate_response(
+            query=message_data.message,
+            style=message_data.style,
+            subset_filter=None,  # Can be extended to allow filtering
+            top_k=5
+        )
 
-    # Mock citations for demonstration
-    mock_citations = [
-        {
-            "subset": "Subset-026",
-            "section": "3.4.2",
-            "page": 42,
-            "paragraph": "5",
-            "text": "Example citation text from the document",
-            "document_id": "doc-placeholder",
-        }
-    ]
+        ai_response_content = rag_result["response"]
+        citations = rag_result["citations"]
+
+        logger.info(f"Generated RAG response with {len(citations)} citations")
+
+    except Exception as e:
+        logger.error(f"Error generating RAG response: {e}")
+        # Fallback to simple error message
+        ai_response_content = (
+            "I apologize, but I encountered an error while searching the ETCS documentation. "
+            "Please ensure the documents are properly loaded and try again."
+        )
+        citations = []
 
     # Save assistant message
     assistant_message = Message(
         conversation_id=conversation.id,
         role=MessageRoleEnum.ASSISTANT,
         content=ai_response_content,
-        citations=mock_citations,
+        citations=citations,
     )
     db.add(assistant_message)
     db.commit()
@@ -84,7 +92,7 @@ async def send_message(
     return ChatResponse(
         conversation_id=conversation.id,
         message=MessageResponse.model_validate(assistant_message),
-        citations=mock_citations,
+        citations=citations,
     )
 
 

@@ -43,19 +43,28 @@ class Settings(BaseSettings):
     QDRANT_PORT: int = 6333
     QDRANT_COLLECTION_NAME: str = "etcs_documents"
 
+    @property
+    def QDRANT_URL(self) -> str:
+        return f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
+
     # JWT Authentication
     SECRET_KEY: str = "your-secret-key-change-this-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # AI/ML APIs (for Phase 2)
-    ANTHROPIC_API_KEY: Optional[str] = None
-    OPENAI_API_KEY: Optional[str] = None
+    # AI/ML APIs - Phase 2 (Using Gemini)
+    GEMINI_API_KEY: Optional[str] = None
 
-    # File upload
+    # Documents
+    DOCUMENTS_DIR: str = "backend/documents"
     MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024  # 100MB
     UPLOAD_DIR: str = "./uploads"
+
+    # RAG Configuration
+    CHUNK_SIZE: int = 1000  # Characters per chunk
+    CHUNK_OVERLAP: int = 200  # Overlap between chunks
+    TOP_K_RESULTS: int = 5  # Number of results to retrieve
 
     # Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
