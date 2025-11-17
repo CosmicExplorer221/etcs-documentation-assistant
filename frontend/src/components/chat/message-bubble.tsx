@@ -30,6 +30,71 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     setSelectedDocument(filename, page)
   }
 
+  // Parse inline citations and make them clickable
+  const handleInlineCitationClick = (citationText: string) => {
+    // Extract page number and subset from citation text
+    // Format: [Subset-026, §3.4.2, p.42, ¶5]
+    const pageMatch = citationText.match(/p\.(\d+)/)
+    const subsetMatch = citationText.match(/(Subset-[\w-]+)/)
+
+    if (subsetMatch) {
+      const page = pageMatch ? parseInt(pageMatch[1]) : 1
+      const filename = `${subsetMatch[1]}.pdf`
+      setSelectedDocument(filename, page)
+    }
+  }
+
+  // Component to render content with clickable inline citations
+  const ContentWithCitations = ({ content }: { content: string }) => {
+    // Pattern to match citations like [Subset-026, §3.4.2, p.42, ¶5]
+    const citationPattern = /\[(Subset-[^\]]+)\]/g
+    const parts: (string | JSX.Element)[] = []
+    let lastIndex = 0
+    let match
+
+    while ((match = citationPattern.exec(content)) !== null) {
+      // Add text before citation
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index))
+      }
+
+      // Add clickable citation
+      const citationText = match[1]
+      parts.push(
+        <button
+          key={match.index}
+          onClick={() => handleInlineCitationClick(match[0])}
+          className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer border border-primary/20"
+          title="Click to view in PDF"
+        >
+          [{citationText}]
+        </button>
+      )
+
+      lastIndex = match.index + match[0].length
+    }
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex))
+    }
+
+    // If no citations found, return markdown as before
+    if (parts.length === 0) {
+      return (
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {content}
+        </ReactMarkdown>
+      )
+    }
+
+    return (
+      <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+        {parts}
+      </div>
+    )
+  }
+
   return (
     <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
       {!isUser && (
@@ -41,9 +106,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       <div className={`flex max-w-[80%] flex-col gap-2 ${isUser ? 'items-end' : 'items-start'}`}>
         <Card className={`p-4 ${isUser ? 'bg-primary text-primary-foreground' : 'bg-card'}`}>
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {message.content}
-            </ReactMarkdown>
+            <ContentWithCitations content={message.content} />
           </div>
         </Card>
 

@@ -105,7 +105,7 @@ Provide a detailed, accurate answer based on the context above. Include citation
                     "temperature": 0.3,  # Lower for more factual responses
                     "top_p": 0.95,
                     "top_k": 40,
-                    "max_output_tokens": 2048,
+                    "max_output_tokens": 8192,  # Increased for longer, complete responses
                 }
             )
 
