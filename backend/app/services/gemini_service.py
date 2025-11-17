@@ -18,7 +18,7 @@ class GeminiService:
     """Service for interacting with Google Gemini API"""
 
     def __init__(self):
-        self.chat_model = "gemini-1.5-flash"  # Fast and free
+        self.chat_model = "gemini-pro"  # Stable model name
         self.embedding_model = "models/text-embedding-004"
 
     def generate_embedding(self, text: str) -> List[float]:
