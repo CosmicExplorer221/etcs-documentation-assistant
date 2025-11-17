@@ -41,7 +41,7 @@ class ApiClient {
 
   // Document methods
   async getDocuments() {
-    const response = await this.client.get('/documents')
+    const response = await this.client.get('/documents/list')
     return response.data
   }
 

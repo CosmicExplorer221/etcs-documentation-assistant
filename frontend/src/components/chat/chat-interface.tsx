@@ -8,11 +8,13 @@ import { StyleSelector } from "./style-selector"
 import { MessageList } from "./message-list"
 import { Send, Loader2 } from "lucide-react"
 import { ConversationStyle } from "@/types"
+import { apiClient } from "@/lib/api-client"
 
 export function ChatInterface() {
   const [message, setMessage] = useState("")
   const [style, setStyle] = useState<ConversationStyle>("professional")
   const [isLoading, setIsLoading] = useState(false)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Array<{
     id: string
     role: 'user' | 'assistant'
@@ -36,29 +38,39 @@ export function ChatInterface() {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const userQuery = message
     setMessage("")
     setIsLoading(true)
 
-    // Simulate API call - will be replaced with actual API integration
-    setTimeout(() => {
+    try {
+      // Call real RAG API (Phase 2)
+      const response = await apiClient.sendMessage(conversationId, userQuery, style)
+
+      // Save conversation ID for subsequent messages
+      if (!conversationId && response.conversation_id) {
+        setConversationId(response.conversation_id)
+      }
+
       const assistantMessage = {
+        id: response.message.id,
+        role: 'assistant' as const,
+        content: response.message.content,
+        citations: response.citations || []
+      }
+
+      setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Error sending message:', error)
+      const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant' as const,
-        content: 'This is a placeholder response. In Phase 2, this will be connected to the RAG system with real ETCS documentation citations.',
-        citations: [
-          {
-            subset: 'Subset-026',
-            section: '3.4.2',
-            page: 42,
-            paragraph: 5,
-            text: 'Example citation text from the document',
-            document_id: 'doc-1'
-          }
-        ]
+        content: 'Sorry, I encountered an error while processing your request. Please make sure the backend server is running and try again.',
+        citations: []
       }
-      setMessages(prev => [...prev, assistantMessage])
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsLoading(false)
-    }, 1500)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

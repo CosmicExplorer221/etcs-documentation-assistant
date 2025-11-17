@@ -3,10 +3,32 @@
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageSquare, Plus, Bookmark, History, FileText } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { apiClient } from "@/lib/api-client"
 
 export function Sidebar() {
   const [activeTab, setActiveTab] = useState<'conversations' | 'bookmarks' | 'documents'>('conversations')
+  const [documents, setDocuments] = useState<any[]>([])
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false)
+
+  // Fetch documents when Documents tab is active
+  useEffect(() => {
+    if (activeTab === 'documents' && documents.length === 0) {
+      fetchDocuments()
+    }
+  }, [activeTab])
+
+  const fetchDocuments = async () => {
+    try {
+      setIsLoadingDocs(true)
+      const docs = await apiClient.getDocuments()
+      setDocuments(docs)
+    } catch (error) {
+      console.error('Error fetching documents:', error)
+    } finally {
+      setIsLoadingDocs(false)
+    }
+  }
 
   return (
     <aside className="flex w-80 flex-col border-r bg-card">
@@ -86,23 +108,30 @@ export function Sidebar() {
 
           {activeTab === 'documents' && (
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">ETCS Documents (Preview)</p>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="truncate">Subset-026 v4.0</span>
+              <p className="text-sm text-muted-foreground">ETCS Documents</p>
+              {isLoadingDocs ? (
+                <div className="rounded-lg border border-dashed p-4 text-center">
+                  <p className="text-xs text-muted-foreground">Loading documents...</p>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="truncate">Subset-023 v3.6</span>
+              ) : documents.length > 0 ? (
+                <div className="space-y-1">
+                  {documents.map((doc, idx) => (
+                    <div key={idx} className="flex items-center gap-2 rounded-lg border p-2 text-sm hover:bg-accent cursor-pointer">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="truncate">{doc.subset}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="truncate">Subset-037 v2.1</span>
+              ) : (
+                <div className="rounded-lg border border-dashed p-4 text-center">
+                  <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">
+                    No documents found. Run init_documents.py to load PDFs.
+                  </p>
                 </div>
-              </div>
+              )}
               <p className="text-xs text-muted-foreground pt-2">
-                Real document integration coming in Phase 2
+                {documents.length} document{documents.length !== 1 ? 's' : ''} loaded
               </p>
             </div>
           )}
