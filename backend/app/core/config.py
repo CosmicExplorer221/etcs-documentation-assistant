@@ -39,12 +39,18 @@ class Settings(BaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
     # Qdrant (Vector Database)
+    # For Qdrant Cloud: set QDRANT_URL and QDRANT_API_KEY
+    # For Local Docker: leave defaults (localhost:6333)
+    QDRANT_URL: Optional[str] = None  # Cloud URL or None for local
+    QDRANT_API_KEY: Optional[str] = None  # Required for Qdrant Cloud
     QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333
     QDRANT_COLLECTION_NAME: str = "etcs_documents"
 
-    @property
-    def QDRANT_URL(self) -> str:
+    def get_qdrant_url(self) -> str:
+        """Get Qdrant URL - either cloud or local"""
+        if self.QDRANT_URL:
+            return self.QDRANT_URL
         return f"http://{self.QDRANT_HOST}:{self.QDRANT_PORT}"
 
     # JWT Authentication

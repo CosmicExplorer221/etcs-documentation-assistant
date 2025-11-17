@@ -17,13 +17,21 @@ class VectorStore:
 
     def __init__(self):
         # Initialize Qdrant client
-        # For demo/local: use in-memory or local path
-        # For production: use Qdrant server URL
-        if settings.QDRANT_URL:
-            self.client = QdrantClient(url=settings.QDRANT_URL)
+        # Qdrant Cloud: use URL + API key
+        # Local Docker: use localhost
+        qdrant_url = settings.get_qdrant_url()
+
+        if settings.QDRANT_API_KEY:
+            # Qdrant Cloud with authentication
+            self.client = QdrantClient(
+                url=qdrant_url,
+                api_key=settings.QDRANT_API_KEY
+            )
+            logger.info(f"Connected to Qdrant Cloud: {qdrant_url}")
         else:
-            # In-memory mode for development
-            self.client = QdrantClient(":memory:")
+            # Local Docker or custom URL
+            self.client = QdrantClient(url=qdrant_url)
+            logger.info(f"Connected to local Qdrant: {qdrant_url}")
 
         self.collection_name = settings.QDRANT_COLLECTION_NAME
 
