@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
     # Database
+    # For demo without Docker: set USE_SQLITE=true
+    # For production with Docker: set USE_SQLITE=false (use PostgreSQL)
+    USE_SQLITE: bool = True
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "etcs_assistant"
@@ -27,6 +30,8 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
+        if self.USE_SQLITE:
+            return "sqlite:///./etcs_assistant.db"
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # Redis
