@@ -3,6 +3,7 @@ Documents API - Manage ETCS documentation
 """
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pathlib import Path
 from typing import List
 import logging
@@ -125,4 +126,42 @@ async def search_documents(search_request: SearchRequest):
 
     except Exception as e:
         logger.error(f"Error searching documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/pdf/{filename}")
+async def get_pdf(filename: str):
+    """
+    Serve a PDF file for viewing
+
+    Args:
+        filename: Name of the PDF file
+
+    Returns:
+        PDF file
+    """
+    try:
+        documents_dir = Path(settings.DOCUMENTS_DIR)
+        pdf_path = documents_dir / filename
+
+        # Security check: ensure file is within documents directory
+        if not pdf_path.resolve().is_relative_to(documents_dir.resolve()):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        if not pdf_path.exists():
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        if not pdf_path.suffix.lower() == '.pdf':
+            raise HTTPException(status_code=400, detail="File is not a PDF")
+
+        return FileResponse(
+            path=str(pdf_path),
+            media_type="application/pdf",
+            filename=filename
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))

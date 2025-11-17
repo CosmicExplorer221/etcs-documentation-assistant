@@ -5,6 +5,7 @@ import { Citation } from "@/types"
 import { User, Bot, FileText } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { useDocument } from "@/contexts/document-context"
 
 interface Message {
   id: string
@@ -19,6 +20,15 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
+  const { setSelectedDocument } = useDocument()
+
+  const handleCitationClick = (citation: Citation) => {
+    // Find the PDF filename from the subset
+    // Format: "SUBSET-026-3 v360" -> "SUBSET-026-3 v360.pdf"
+    const filename = `${citation.subset}.pdf`
+    const page = citation.page || 1
+    setSelectedDocument(filename, page)
+  }
 
   return (
     <div className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -43,11 +53,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
             {message.citations.map((citation, idx) => (
               <button
                 key={idx}
-                className="flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-xs hover:bg-accent transition-colors"
-                onClick={() => {
-                  // TODO: Scroll to citation in document viewer
-                  console.log('Navigate to citation:', citation)
-                }}
+                className="flex items-center gap-1 rounded-md border bg-card px-2 py-1 text-xs hover:bg-accent transition-colors cursor-pointer"
+                onClick={() => handleCitationClick(citation)}
+                title={`Open ${citation.subset} at page ${citation.page || 1}`}
               >
                 <FileText className="h-3 w-3 text-primary" />
                 <span className="font-medium">{citation.subset}</span>

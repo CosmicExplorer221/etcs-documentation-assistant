@@ -5,11 +5,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { MessageSquare, Plus, Bookmark, History, FileText } from "lucide-react"
 import { useState, useEffect } from "react"
 import { apiClient } from "@/lib/api-client"
+import { useDocument } from "@/contexts/document-context"
 
 export function Sidebar() {
   const [activeTab, setActiveTab] = useState<'conversations' | 'bookmarks' | 'documents'>('conversations')
   const [documents, setDocuments] = useState<any[]>([])
   const [isLoadingDocs, setIsLoadingDocs] = useState(false)
+  const { setSelectedDocument } = useDocument()
 
   // Fetch documents when Documents tab is active
   useEffect(() => {
@@ -28,6 +30,10 @@ export function Sidebar() {
     } finally {
       setIsLoadingDocs(false)
     }
+  }
+
+  const handleDocumentClick = (doc: any) => {
+    setSelectedDocument(doc.filename, 1)
   }
 
   return (
@@ -116,10 +122,15 @@ export function Sidebar() {
               ) : documents.length > 0 ? (
                 <div className="space-y-1">
                   {documents.map((doc, idx) => (
-                    <div key={idx} className="flex items-center gap-2 rounded-lg border p-2 text-sm hover:bg-accent cursor-pointer">
+                    <button
+                      key={idx}
+                      onClick={() => handleDocumentClick(doc)}
+                      className="flex w-full items-center gap-2 rounded-lg border p-2 text-sm hover:bg-accent cursor-pointer transition-colors"
+                      title={`Open ${doc.filename}`}
+                    >
                       <FileText className="h-4 w-4 text-primary" />
                       <span className="truncate">{doc.subset}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               ) : (
