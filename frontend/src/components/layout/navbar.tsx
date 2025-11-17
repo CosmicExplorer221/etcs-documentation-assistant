@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, Search, Settings, User } from "lucide-react"
+import { Menu, Search, Settings } from "lucide-react"
 
 interface NavbarProps {
   onToggleSidebar: () => void
@@ -26,7 +26,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
           </div>
           <div>
             <h1 className="text-lg font-semibold">ETCS Documentation Assistant</h1>
-            <p className="text-xs text-muted-foreground">AI-Powered Railway Engineering Platform</p>
+            <p className="text-xs text-muted-foreground">Demo Mode - No Authentication Required</p>
           </div>
         </div>
       </div>
@@ -38,10 +38,6 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
 
         <Button variant="ghost" size="icon" aria-label="Settings">
           <Settings className="h-5 w-5" />
-        </Button>
-
-        <Button variant="ghost" size="icon" aria-label="User profile">
-          <User className="h-5 w-5" />
         </Button>
       </div>
     </nav>

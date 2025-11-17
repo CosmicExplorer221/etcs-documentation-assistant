@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api import auth, chat
+from app.api import chat
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -11,7 +11,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="AI-powered platform for railway engineers to interact with ETCS technical documentation",
+    description="AI-powered platform for railway engineers to interact with ETCS technical documentation (Demo Mode)",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -25,8 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(auth.router, prefix=settings.API_V1_STR)
+# Include routers (auth disabled for demo)
+# app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=settings.API_V1_STR)
 
 

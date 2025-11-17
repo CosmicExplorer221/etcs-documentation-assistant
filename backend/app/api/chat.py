@@ -2,28 +2,28 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
-from app.core.security import get_current_user_id
 from app.models import Conversation, Message, MessageRoleEnum
 from app.schemas.conversation import ConversationResponse, ConversationWithMessages
 from app.schemas.message import MessageCreate, MessageResponse, ChatResponse
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
+# Demo mode - single user ID for all requests
+DEMO_USER_ID = "demo-user"
+
 
 @router.post("/message", response_model=ChatResponse)
 async def send_message(
     message_data: MessageCreate,
-    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     """Send a message and get AI response"""
     conversation = None
 
-    # If conversation_id is provided, verify it exists and belongs to user
+    # If conversation_id is provided, verify it exists
     if message_data.conversation_id:
         conversation = db.query(Conversation).filter(
             Conversation.id == message_data.conversation_id,
-            Conversation.user_id == user_id,
         ).first()
 
         if not conversation:
@@ -34,7 +34,7 @@ async def send_message(
     else:
         # Create new conversation
         conversation = Conversation(
-            user_id=user_id,
+            user_id=DEMO_USER_ID,
             title=message_data.message[:50] + "..." if len(message_data.message) > 50 else message_data.message,
             style=message_data.style,
         )
@@ -90,13 +90,11 @@ async def send_message(
 
 @router.get("/conversations", response_model=List[ConversationResponse])
 async def get_conversations(
-    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    """Get all conversations for the current user"""
+    """Get all conversations (demo mode - all conversations)"""
     conversations = (
         db.query(Conversation)
-        .filter(Conversation.user_id == user_id)
         .order_by(Conversation.updated_at.desc())
         .all()
     )
@@ -107,13 +105,11 @@ async def get_conversations(
 @router.get("/conversations/{conversation_id}", response_model=ConversationWithMessages)
 async def get_conversation(
     conversation_id: str,
-    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     """Get a specific conversation with all messages"""
     conversation = db.query(Conversation).filter(
         Conversation.id == conversation_id,
-        Conversation.user_id == user_id,
     ).first()
 
     if not conversation:
@@ -128,13 +124,11 @@ async def get_conversation(
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_conversation(
     conversation_id: str,
-    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     """Delete a conversation"""
     conversation = db.query(Conversation).filter(
         Conversation.id == conversation_id,
-        Conversation.user_id == user_id,
     ).first()
 
     if not conversation:
