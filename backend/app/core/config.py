@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
 
     # Documents
-    DOCUMENTS_DIR: str = "backend/documents"
+    DOCUMENTS_DIR: str = "documents"  # Relative to backend/ directory
     MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024  # 100MB
     UPLOAD_DIR: str = "./uploads"
 
