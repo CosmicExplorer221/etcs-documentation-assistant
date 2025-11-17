@@ -182,7 +182,7 @@ class RAGService:
                 elif part.startswith('¶'):
                     citation['paragraph'] = part[1:].strip()
 
-            # Find matching chunk for full text
+            # Find matching chunk for full text and document_id
             if citation.get('subset'):
                 for result in search_results:
                     if result['subset'] == citation['subset']:
@@ -190,7 +190,8 @@ class RAGService:
                         citation['document_id'] = result['document_id']
                         break
 
-            if citation:  # Only add if we parsed something
+            # Only add if we have required fields
+            if citation.get('text') and citation.get('document_id'):
                 citations.append(citation)
 
         # If no citations found in text, create them from top results
