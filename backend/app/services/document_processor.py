@@ -31,7 +31,8 @@ class DocumentChunk:
         self.page = page
         self.chunk_index = chunk_index
         self.section = section
-        self.paragraph = paragraph
+        # Convert paragraph to string if it's an integer
+        self.paragraph = str(paragraph) if paragraph is not None else None
 
     def to_dict(self) -> Dict:
         """Convert to dictionary for storage"""
