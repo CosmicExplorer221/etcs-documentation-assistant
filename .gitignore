@@ -1,0 +1,70 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel
+
+# Production
+build/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Testing
+.coverage
+.pytest_cache/
+coverage/
+*.cover
+*.py,cover
+htmlcov/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads
+uploads/
+*.pdf
+*.csv
+
+# Alembic
+backend/alembic/versions/*.pyc
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+.cache/
+.temp/
+tmp/
