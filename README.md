@@ -11,6 +11,16 @@
 
 The ETCS Documentation Assistant is a production-ready web application designed to help railway engineers efficiently navigate and understand ETCS (European Train Control System) technical specifications through AI-powered conversations with precise citations and an integrated document viewer.
 
+## 🚀 Quick Start
+
+**Want to run a demo immediately?** (No Docker required!)
+
+👉 **[See DEMO_SETUP.md](DEMO_SETUP.md)** for ultra-simple 5-minute setup
+
+**For production deployment with database:**
+
+Continue reading below for full setup with PostgreSQL, Redis, and Qdrant.
+
 ## Features
 
 ### Phase 1 (Current) ✅

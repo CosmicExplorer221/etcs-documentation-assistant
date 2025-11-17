@@ -59,39 +59,51 @@ export function Sidebar() {
       <ScrollArea className="flex-1">
         <div className="p-4">
           {activeTab === 'conversations' && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Recent Conversations</p>
-              {/* Placeholder for conversation list */}
-              <div className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent cursor-pointer">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">ETCS Level 2 System Overview</p>
-                  <p className="text-xs text-muted-foreground truncate">What are the main components...</p>
-                </div>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Active Session</p>
+              <div className="rounded-lg border border-dashed p-4 text-center">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm font-medium mb-1">Demo Mode</p>
+                <p className="text-xs text-muted-foreground">
+                  Start chatting! Your conversation will be active during this session.
+                  (History saved temporarily)
+                </p>
               </div>
             </div>
           )}
 
           {activeTab === 'bookmarks' && (
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Your Bookmarks</p>
-              <p className="text-xs text-muted-foreground">No bookmarks yet</p>
+              <p className="text-sm text-muted-foreground">Bookmarks</p>
+              <div className="rounded-lg border border-dashed p-4 text-center">
+                <Bookmark className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  Bookmark feature coming in Phase 3
+                </p>
+              </div>
             </div>
           )}
 
           {activeTab === 'documents' && (
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Available Documents</p>
+              <p className="text-sm text-muted-foreground">ETCS Documents (Preview)</p>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm hover:bg-accent cursor-pointer">
+                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
                   <FileText className="h-4 w-4 text-primary" />
                   <span className="truncate">Subset-026 v4.0</span>
                 </div>
-                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm hover:bg-accent cursor-pointer">
+                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
                   <FileText className="h-4 w-4 text-primary" />
                   <span className="truncate">Subset-023 v3.6</span>
                 </div>
+                <div className="flex items-center gap-2 rounded-lg border p-2 text-sm opacity-60">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span className="truncate">Subset-037 v2.1</span>
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground pt-2">
+                Real document integration coming in Phase 2
+              </p>
             </div>
           )}
         </div>
