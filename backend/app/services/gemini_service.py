@@ -98,7 +98,27 @@ User Question: {prompt}
 
 Provide a detailed, accurate answer based on the context above. Include citations for all factual statements."""
 
-            # Initialize model
+            # Initialize model with safety settings
+            # Use more permissive settings for technical documentation
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_ONLY_HIGH"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_ONLY_HIGH"
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_ONLY_HIGH"
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_ONLY_HIGH"
+                }
+            ]
+
             model = genai.GenerativeModel(
                 model_name=self.chat_model,
                 generation_config={
@@ -106,11 +126,35 @@ Provide a detailed, accurate answer based on the context above. Include citation
                     "top_p": 0.95,
                     "top_k": 40,
                     "max_output_tokens": 8192,  # Increased for longer, complete responses
-                }
+                },
+                safety_settings=safety_settings
             )
 
             # Generate response
             response = model.generate_content(full_prompt)
+
+            # Check if response was blocked or has no valid parts
+            if not response.candidates:
+                logger.warning("Gemini response has no candidates")
+                return "I apologize, but I'm unable to generate a response at this time. Please try rephrasing your question or ask about a different topic."
+
+            candidate = response.candidates[0]
+
+            # Check finish reason
+            # finish_reason: 0=FINISH_REASON_UNSPECIFIED, 1=STOP, 2=SAFETY, 3=RECITATION, 4=OTHER
+            if candidate.finish_reason == 2:  # SAFETY
+                logger.warning(f"Response blocked by safety filters. Prompt: {prompt[:100]}")
+                return "I apologize, but I cannot provide a response to this query due to content safety guidelines. Please try rephrasing your question or ask about a different aspect of ETCS documentation."
+
+            if candidate.finish_reason == 3:  # RECITATION
+                logger.warning(f"Response blocked due to recitation. Prompt: {prompt[:100]}")
+                return "I apologize, but I need to rephrase my response. Please try asking your question again."
+
+            # Check if there are valid parts with text
+            if not candidate.content or not candidate.content.parts:
+                logger.warning("Gemini response has no content parts")
+                return "I apologize, but I encountered an issue generating a response. Please try again."
+
             return response.text
 
         except Exception as e:
