@@ -2,10 +2,11 @@
 
 import { Card } from "@/components/ui/card"
 import { Citation } from "@/types"
-import { User, Bot, FileText } from "lucide-react"
+import { User, Bot, FileText, Info } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useDocument } from "@/contexts/document-context"
+import * as Tooltip from "@radix-ui/react-tooltip"
 
 interface Message {
   id: string
@@ -30,57 +31,113 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     setSelectedDocument(filename, page)
   }
 
+  // Find citation object from citation text
+  const findCitationByText = (citationText: string): Citation | undefined => {
+    if (!message.citations) return undefined
+
+    // Extract subset and page from citation text
+    const subsetMatch = citationText.match(/(?:Subset-[\w-]+(?:\s+v\d+)?)/i)
+    const pageMatch = citationText.match(/p\.(\d+)/)
+
+    if (!subsetMatch) return undefined
+
+    const subset = subsetMatch[0]
+    const page = pageMatch ? parseInt(pageMatch[1]) : undefined
+
+    // Find matching citation in the citations array
+    return message.citations.find(c => {
+      const subsetMatches = c.subset === subset
+      const pageMatches = !page || c.page === page
+      return subsetMatches && pageMatches
+    })
+  }
+
   // Parse inline citations and make them clickable
   const handleInlineCitationClick = (citationText: string) => {
     // Extract page number and subset from citation text
-    // Format: [Subset-026, §3.4.2, p.42, ¶5]
     const pageMatch = citationText.match(/p\.(\d+)/)
-    const subsetMatch = citationText.match(/(Subset-[\w-]+)/)
+    const subsetMatch = citationText.match(/(?:Subset-[\w-]+(?:\s+v\d+)?)/i)
 
     if (subsetMatch) {
       const page = pageMatch ? parseInt(pageMatch[1]) : 1
-      const filename = `${subsetMatch[1]}.pdf`
+      const filename = `${subsetMatch[0]}.pdf`
       setSelectedDocument(filename, page)
     }
   }
 
   // Component to render content with clickable inline citations
   const ContentWithCitations = ({ content }: { content: string }) => {
-    // Pattern to match citations like [Subset-026, §3.4.2, p.42, ¶5]
-    const citationPattern = /\[(Subset-[^\]]+)\]/g
+    // Broader pattern to match various citation formats
+    // Matches: [Subset-026, ...], [Subset-026-3 v360, ...], etc.
+    const citationPattern = /\[((?:Subset-[\w-]+(?:\s+v\d+)?)[^\]]*)\]/gi
     const parts: (string | JSX.Element)[] = []
     let lastIndex = 0
     let match
+    let citationIndex = 0
 
     while ((match = citationPattern.exec(content)) !== null) {
       // Add text before citation
       if (match.index > lastIndex) {
-        parts.push(content.substring(lastIndex, match.index))
+        const textBefore = content.substring(lastIndex, match.index)
+        parts.push(<span key={`text-${lastIndex}`}>{textBefore}</span>)
       }
 
-      // Add clickable citation
+      // Find the full citation object to get the referenced text
       const citationText = match[1]
+      const citationObj = findCitationByText(match[0])
+
+      // Add clickable citation with tooltip
       parts.push(
-        <button
-          key={match.index}
-          onClick={() => handleInlineCitationClick(match[0])}
-          className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors cursor-pointer border border-primary/20"
-          title="Click to view in PDF"
-        >
-          [{citationText}]
-        </button>
+        <Tooltip.Provider key={`citation-${citationIndex}`}>
+          <Tooltip.Root delayDuration={200}>
+            <Tooltip.Trigger asChild>
+              <button
+                onClick={() => handleInlineCitationClick(match[0])}
+                className="inline-flex items-center gap-1 rounded bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 text-xs font-medium text-amber-900 dark:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors cursor-pointer border border-amber-300 dark:border-amber-700 shadow-sm"
+              >
+                <Info className="h-3 w-3" />
+                [{citationText}]
+              </button>
+            </Tooltip.Trigger>
+            {citationObj && citationObj.text && (
+              <Tooltip.Portal>
+                <Tooltip.Content
+                  className="max-w-md rounded-lg border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-lg z-50"
+                  sideOffset={5}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-primary">
+                      <FileText className="h-3 w-3" />
+                      <span>{citationObj.subset}</span>
+                      {citationObj.page && <span>• Page {citationObj.page}</span>}
+                    </div>
+                    <p className="text-xs leading-relaxed italic border-l-2 border-primary/30 pl-3">
+                      "{citationObj.text}"
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      Click citation to view in PDF
+                    </p>
+                  </div>
+                  <Tooltip.Arrow className="fill-popover" />
+                </Tooltip.Content>
+              </Tooltip.Portal>
+            )}
+          </Tooltip.Root>
+        </Tooltip.Provider>
       )
 
       lastIndex = match.index + match[0].length
+      citationIndex++
     }
 
     // Add remaining text
     if (lastIndex < content.length) {
-      parts.push(content.substring(lastIndex))
+      const remainingText = content.substring(lastIndex)
+      parts.push(<span key={`text-${lastIndex}`}>{remainingText}</span>)
     }
 
     // If no citations found, return markdown as before
-    if (parts.length === 0) {
+    if (citationIndex === 0) {
       return (
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {content}
@@ -89,7 +146,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     }
 
     return (
-      <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+      <div className="prose prose-sm dark:prose-invert max-w-none">
         {parts}
       </div>
     )
